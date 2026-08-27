@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b0d12" />
+  <title>MovieScore</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="mark">MS</div>
+      <div>
+        <h1>MovieScore</h1>
+        <p>Critics + viewers, confidence-adjusted</p>
+      </div>
+    </div>
+    <button id="settingsBtn" class="ghost-btn" type="button">API Settings</button>
+  </header>
+
+  <main class="shell">
+    <section class="hero">
+      <div>
+        <span class="eyebrow">YOUR CONSENSUS ENGINE</span>
+        <h2>One score. Less noise.</h2>
+        <p class="hero-copy">Search a movie, combine audience and critic evidence, and keep Rotten Tomatoes separate as a positivity measure rather than pretending it is an average rating.</p>
+      </div>
+      <form id="searchForm" class="search-box">
+        <input id="searchInput" autocomplete="off" placeholder="Search a movie…" aria-label="Movie title" />
+        <button type="submit">Search</button>
+      </form>
+      <div id="searchHint" class="hint"></div>
+    </section>
+
+    <section id="status" class="status hidden"></section>
+    <section id="results" class="results hidden"></section>
+
+    <section id="moviePanel" class="movie-panel hidden">
+      <div class="movie-main">
+        <div class="poster-wrap">
+          <img id="poster" alt="" />
+          <div id="posterFallback" class="poster-fallback">NO POSTER</div>
+        </div>
+        <div class="movie-copy">
+          <div class="title-row">
+            <div><h2 id="movieTitle"></h2><p id="movieMeta" class="muted"></p></div>
+            <div id="scoreBadge" class="score-badge"><span id="finalScore">—</span><small>OUR SCORE</small></div>
+          </div>
+          <p id="plot" class="plot"></p>
+          <div class="split-scores">
+            <div class="metric"><span id="criticScore" class="metric-value">—</span><span class="metric-label">Critics</span><span id="criticConfidence" class="metric-sub">—</span></div>
+            <div class="metric"><span id="audienceScore" class="metric-value">—</span><span class="metric-label">Audience</span><span id="audienceConfidence" class="metric-sub">—</span></div>
+          </div>
+          <div id="qualityNote" class="quality-note"></div>
+          <div class="scrape-controls"><button id="refreshSourcesBtn" type="button" class="ghost-btn">Refresh scraped ratings</button><span id="scrapeSummary" class="tiny"></span></div>
+        </div>
+      </div>
+
+      <div class="source-grid">
+        <article class="source-card">
+          <div class="source-head"><h3>IMDb</h3><span class="auto-pill">AUTO</span></div>
+          <div class="source-score"><span id="imdbRaw">—</span><small>/10</small></div>
+          <p id="imdbVotes" class="muted">— ratings</p>
+          <div class="confidence-row"><span>Confidence</span><strong id="imdbConf">—</strong></div>
+        </article>
+
+        <article class="source-card editable">
+          <div class="source-head"><h3>Letterboxd</h3><span class="auto-pill">SCRAPED</span></div>
+          <div class="source-score"><span id="lbRaw">—</span><small>/5</small></div>
+          <p id="lbVotesText" class="muted">— ratings</p>
+          <p id="lbStatus" class="scrape-status">Waiting…</p>
+          <a id="lbSourceLink" class="source-link hidden" target="_blank" rel="noreferrer">Open source ↗</a>
+          <details class="manual-fallback"><summary>Manual fallback</summary><label>Rating / 5<input id="lbRating" type="number" min="0" max="5" step="0.01" placeholder="e.g. 3.6" /></label><label>Number of ratings<input id="lbVotes" type="number" min="0" step="1" placeholder="e.g. 186200" /></label></details>
+          <div class="confidence-row"><span>Confidence</span><strong id="lbConf">—</strong></div>
+        </article>
+
+        <article class="source-card editable">
+          <div class="source-head"><h3>Metacritic</h3><span class="auto-pill">SCRAPED</span></div>
+          <div class="source-score"><span id="mcRaw">—</span><small>/100</small></div>
+          <p id="mcReviewsText" class="muted">— critic reviews</p>
+          <p id="mcStatus" class="scrape-status">Waiting…</p>
+          <a id="mcSourceLink" class="source-link hidden" target="_blank" rel="noreferrer">Open source ↗</a>
+          <details class="manual-fallback"><summary>Manual fallback</summary><label>Metascore<input id="mcScoreOverride" type="number" min="0" max="100" step="1" placeholder="e.g. 78" /></label><label>Critic review count<input id="mcReviews" type="number" min="0" step="1" placeholder="e.g. 43" /></label></details>
+          <div class="confidence-row"><span>Confidence</span><strong id="mcConf">—</strong></div>
+        </article>
+
+        <article class="source-card rt-card">
+          <div class="source-head"><h3>Rotten Tomatoes</h3><span class="separate-pill">SEPARATE</span></div>
+          <div class="source-score"><span id="rtRaw">—</span><small>% positive</small></div>
+          <p class="muted">Displayed for context; not treated as an average rating.</p>
+        </article>
+      </div>
+
+      <details class="formula-card">
+        <summary>How this score is calculated</summary>
+        <div class="formula-content">
+          <p><strong>Normalize:</strong> IMDb × 10, Letterboxd × 20, Metacritic stays 0–100.</p>
+          <p><strong>Confidence:</strong> C = N / (N + K), with K = 10,000 IMDb ratings, 2,000 Letterboxd ratings, and 20 Metacritic critic reviews.</p>
+          <p><strong>Audience:</strong> 60% IMDb + 40% Letterboxd, with each source weighted by confidence. Missing audience sources are automatically re-normalized.</p>
+          <p><strong>Final:</strong> base 55% critics / 45% audience, then adjusted once by the confidence of each side.</p>
+          <p><strong>RT:</strong> shown separately because Tomatometer is the percentage of positive reviews, not an average review grade.</p>
+          <p><strong>Private scraper:</strong> Letterboxd is read from its public JSON-LD; Metacritic is read from its public movie page. Results are cached locally for six hours.</p>
+        </div>
+      </details>
+    </section>
+  </main>
+
+  <dialog id="settingsDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="dialog-head"><div><span class="eyebrow">DATA CONNECTION</span><h2>OMDb API key</h2></div><button value="cancel" class="icon-btn" aria-label="Close">×</button></div>
+      <p class="muted">MovieScore stores this key only in this browser's local storage. Get a free OMDb key, paste it below, and movie search becomes live.</p>
+      <label>API key<input id="apiKeyInput" type="password" autocomplete="off" placeholder="Paste OMDb API key" /></label>
+      <div class="dialog-actions"><button id="clearKeyBtn" type="button" class="ghost-btn">Clear</button><button id="saveKeyBtn" type="button">Save key</button></div>
+      <p class="tiny">Free OMDb keys are currently listed as allowing up to 1,000 requests/day.</p>
+    </form>
+  </dialog>
+
+  <footer><span>MovieScore Private MVP</span><span>Formula v1.1 · Private scraper</span></footer>
+  <script src="app.js"></script>
+</body>
+</html>
