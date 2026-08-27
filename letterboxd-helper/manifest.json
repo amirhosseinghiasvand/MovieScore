@@ -1,11 +1,12 @@
 {
   "manifest_version": 3,
-  "name": "MovieScore Letterboxd Helper",
-  "version": "1.0.0",
-  "description": "Reads Letterboxd's public film JSON-LD in your normal Chrome browser and sends the rating back to your local MovieScore app.",
+  "name": "MovieScore Browser Helper",
+  "version": "1.1.0",
+  "description": "Reads public Letterboxd and Metacritic movie data in your normal Chrome browser and sends it back to your local MovieScore app.",
   "permissions": ["tabs", "storage"],
   "host_permissions": [
     "https://letterboxd.com/*",
+    "https://www.metacritic.com/*",
     "http://127.0.0.1:8765/*"
   ],
   "background": {
@@ -14,12 +15,17 @@
   "content_scripts": [
     {
       "matches": ["http://127.0.0.1:8765/*"],
-      "js": ["moviescore.js"],
+      "js": ["moviescore.js", "metacritic-moviescore.js"],
       "run_at": "document_idle"
     },
     {
       "matches": ["https://letterboxd.com/*"],
       "js": ["letterboxd.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://www.metacritic.com/movie/*"],
+      "js": ["metacritic.js"],
       "run_at": "document_idle"
     }
   ]
