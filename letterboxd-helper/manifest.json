@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "MovieScore Browser Helper",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Reads public Letterboxd and Metacritic movie data in your normal Chrome browser and sends it back to your local MovieScore app.",
   "permissions": ["tabs", "storage"],
   "host_permissions": [
@@ -15,8 +15,15 @@
   "content_scripts": [
     {
       "matches": ["http://127.0.0.1:8765/*"],
+      "js": ["page-bridge.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    },
+    {
+      "matches": ["http://127.0.0.1:8765/*"],
       "js": ["moviescore.js", "metacritic-moviescore.js"],
-      "run_at": "document_idle"
+      "run_at": "document_idle",
+      "world": "ISOLATED"
     },
     {
       "matches": ["https://letterboxd.com/*"],
