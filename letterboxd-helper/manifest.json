@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "MovieScore Letterboxd Helper",
+  "version": "1.0.0",
+  "description": "Reads Letterboxd's public film JSON-LD in your normal Chrome browser and sends the rating back to your local MovieScore app.",
+  "permissions": ["tabs", "storage"],
+  "host_permissions": [
+    "https://letterboxd.com/*",
+    "http://127.0.0.1:8765/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["http://127.0.0.1:8765/*"],
+      "js": ["moviescore.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://letterboxd.com/*"],
+      "js": ["letterboxd.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
