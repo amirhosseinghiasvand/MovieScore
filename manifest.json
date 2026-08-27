@@ -1,0 +1,10 @@
+{
+  "name": "MovieScore",
+  "short_name": "MovieScore",
+  "description": "Confidence-adjusted movie consensus score.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0b0d12",
+  "theme_color": "#0b0d12",
+  "icons": []
+}
