@@ -6,6 +6,7 @@ const { URL } = require('url');
 const PORT = Number(process.env.PORT || 8765);
 const ROOT = __dirname;
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+const SCRAPE_DEADLINE_MS = 13000;
 const cache = new Map();
 
 const MIME = {
@@ -285,7 +286,27 @@ async function handleScrape(req, res, u) {
     output.metacritic.error = 'Movie title missing';
   }
 
-  await Promise.all(jobs);
+  let deadlineTimer;
+  let deadlineHit = false;
+  const deadline = new Promise(resolve => {
+    deadlineTimer = setTimeout(() => {
+      deadlineHit = true;
+      resolve();
+    }, SCRAPE_DEADLINE_MS);
+  });
+
+  await Promise.race([Promise.all(jobs), deadline]);
+  clearTimeout(deadlineTimer);
+
+  if (deadlineHit) {
+    if (!output.letterboxd.ok && !output.letterboxd.error) {
+      output.letterboxd.error = 'Local server timed out; browser helper will try';
+    }
+    if (!output.metacritic.ok && !output.metacritic.error) {
+      output.metacritic.error = 'Local server timed out; browser helper will try';
+    }
+  }
+
   sendJson(res, 200, output);
 }
 
